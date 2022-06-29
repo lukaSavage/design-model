@@ -250,6 +250,18 @@
 
 # 第2章：设计模式
 
+## 零、调试安装
+
+```bash
+cnpm init -y
+tsc --init
+npm i ts-node -g
+下载vscode插件 code runner
+下载好之后，右键`run code`即可~
+```
+
+
+
 ## 一、面向对象
 
 > <font color="#f00">以类和对象作为组织代码的基本单位，并实现封装、抽象、继承、多态四个特性</font>
@@ -795,3 +807,104 @@ class Person {
 - 简洁性 代码是否简单清晰?
 - 可复用性 相同的代码不要写2遍?
 - 可测试性 是否方便写单元测试和集成测试?
+
+## 三、23种设计模式总括
+
+### 3.1 设计模式分类
+
+> 通常可以分为 `创建型`、`结构型`、`行为型`。
+
+#### 3.1.1 创建型
+
+- `重要: 工厂模式(工厂方法模式、抽象工厂模式、简单工厂模式)、建造者模式、单例模式`
+- 不重要: 原型模式
+
+#### 3.1.2 结构型模式
+
+- `重要: 代理模式、桥接模式、装饰器模式、适配器模式`
+- 不重要: 外观模式、组合模式、享元模式
+
+#### 3.1.3 行为型
+
+- `重要: 观察者模式、模版方法模式、策略模式、职责链模式、迭代器模式、状态模式`
+- 不重要: 访问者模式、备忘录模式、命令模式、解释器模式、中介者模式
+
+## 四、工厂模式
+
+### 4.1 简单工厂模式
+
+> 简单工厂模式是由一个工厂对象决定创建出哪一种产品类的实例。即<font color="#f00">`一个类通过传递的参数不同生成不同的实例`</font>。
+
+#### 4.1.1 类图演示
+
+![简单工厂](img/22.png)
+
+#### 4.1.2 代码演示
+
+```tsx
+abstract class Coffee {
+    constructor(public name: string) {
+
+    }
+}
+class AmericanoCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+class LatteCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+class CappuccinoCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+
+class Café {
+    static order(name: string) {
+        switch (name) {
+            case 'Americano':
+                return new AmericanoCoffee('美式咖啡');
+            case 'Latte':
+                return new LatteCoffee('拿铁咖啡');
+            case 'Cappuccino':
+                return new LatteCoffee('卡布奇诺');
+            default:
+                return null;
+        }
+    }
+}
+console.log(Café.order('Americano'));
+console.log(Café.order('Latte'));
+console.log(Café.order('Cappuccino'));
+
+```
+
+#### 4.1.3 缺点
+
+- 如果产品的种类非常多`switch case`的判断会变得非常多
+- 不符合开放—封闭原则,如果要增加或删除一个产品种类，就要修改`switch case`的判断代码
+
+#### 4.1.4 前端应用场景
+
+例如react源码中的[createElement](https://github.com/facebook/react/blob/main/packages/react/src/ReactElement.js#L313-L395 )
+
+方法
+
+```tsx
+export function createElement(type, config, children) {
+    return ReactElement(
+        type,
+        key,
+        ref,
+        self,
+        source,
+        ReactCurrentOwner.current,
+        props,
+    );
+}
+```
+
