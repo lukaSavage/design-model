@@ -432,3 +432,366 @@ d.speak();
 
 ## 二、设计原则
 
+### 2.1 什么是设计？
+
+- 按哪一种思路或者标准来实现功能
+- 功能相同，可以有不同设计的方式
+- 需求如果不断变化，设计的作用才能体现出来
+
+### 2.2 SOLID五大设计原则
+
+| 首字母 | 指代         | 概念                                                         |
+| :----- | :----------- | :----------------------------------------------------------- |
+| S      | 单一职责原则 | 单一功能原则认为对象应该仅具有一种`单一功能`的概念           |
+| O      | 开放封闭原则 | 开闭原则认为`软件体应该是对于扩展开放的，但是对于修改封闭的`的概念 |
+| L      | 里氏替换原则 | 里氏替换原则认为程序中的对象应该是可以在不改变程序正确性的前提下`被它的子类所替换`的的概念 |
+| I      | 接口隔离原则 | 接口隔离原则认为`多个特定客户端接口要好于一个宽泛用途的接口`的概念 |
+| D      | 依赖反转原则 | 依赖反转原则认为一个方法应该遵从`依赖于抽象而不是一个实例`的概念,依赖注入是该原则的一种实现方式。 |
+
+#### 2.2.1 O 开放封闭原则
+
+- `Open Closed Principle`
+- 对扩展开放，对修改关闭
+- 增加需求时，扩展新代码，而非修改已有代码
+- 开闭原则是设计模式中的总原则
+- 对近期可能会变化并且如果有变化但改动量巨大的地方要增加扩展点,扩展点过多会降低可读性
+
+```js
+class Customer {
+    constructor(public rank: string) { }
+}
+class Product {
+    constructor(public name: string, public price: number) {
+
+    }
+    cost(customer: Customer) {
+        switch (customer.rank) {
+            case 'member':
+                return this.price * .8;
+            case 'vip':
+                return this.price * .6;
+            default:
+                return this.price;
+        }
+    }
+}
+let p1 = new Product('笔记本电脑', 1000);
+let member = new Customer('member');
+let vip = new Customer('vip');
+let guest = new Customer('guest');
+console.log(p1.cost(member));
+console.log(p1.cost(vip));
+console.log(p1.cost(guest));
+class Customer {
++    constructor(public rank: string, public discount: number = 1) { }
++    getDiscount() {
++        return this.discount;
++    }
+}
+class Product {
+    constructor(public name: string, public price: number) {
+
+    }
+    cost(customer: Customer) {
+-        /*  switch (customer.rank) {
+-             case 'member':
+-                 return this.price * .8;
+-             case 'vip':
+-                 return this.price * .6;
+-             default:
+-                 return this.price;
+-         } */
++        return this.price * customer.getDiscount();
+    }
+}
++let p1 = new Product('笔记本电脑', 1000);
++let member = new Customer('member', .8);
++let vip = new Customer('vip', .6);
+let guest = new Customer('guest');
+console.log(p1.cost(member));
+console.log(p1.cost(vip));
+console.log(p1.cost(guest));
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+let instance: AxiosInstance = axios.create();
+instance.interceptors.request.use((config: AxiosRequestConfig) => {
+    config.url = 'http://localhost:8080' + config.url;
+    return config;
+});
+
+instance.interceptors.response.use(response => {
+    if (response.status !== 200 || response.data.code != 0) {
+        return Promise.reject(response);
+    } else {
+        return response.data.data;
+    }
+})
+/**
+ * {code:0,data:{id:1,name:'zhufeng'}}
+ */
+instance({
+    url: '/api/users'
+}).then(result => {
+    console.log(result);
+}, error => {
+    console.error(error);
+});
+```
+
+#### 2.2.2 S 单一职责原则
+
+- Single responsibility principle
+- 一个类或者模块只负责完成一个职责,如果功能特别复杂就进行拆分
+- 单一职责可以降低类的复杂性，提高代码可读性、可维护性
+- 当类代码行数过多、方法过多、功能太多、职责太杂的时候就要对类进行拆分了
+- 拆分不能过度，如果拆分过度会损失内聚性和维护性
+- [lodashjs](https://www.lodashjs.com/docs/latest)
+- [jquery](https://api.jquery.com/)
+
+![单一职责原则](img/16.png)
+
+```diff
+class Product {
+    public name: string;
+-    public categoryName: string;
+-    public categoryIcon: string;
++     public category:Category;
+}
++class Category {
++    public name: string;
++    public icon: string;
++}
+```
+
+#### 2.2.3 L 里氏替换原则
+
+- Liskov Substitution Principle
+- 所有引用基类的地方必须能透明地使用其子类的对象
+- 子类能替换掉父类，使用者可能根本就不需要知道是父类还是子类,反之则不行
+- 里氏替换原则是开闭原则的实现基础,程序设计的时候尽量使用基类定义及引用，运行时再决定使用哪个子类
+- 里氏替换原则可以提高代码的复用性，提高代码的可扩展性，也增加了耦合性
+- 相对于多态，这个原则是讲的是类如何设计，子类如果违反了父类的功能则表示违反了里氏替换原则
+
+![里氏替换原则](img/17.png)
+
+```js
+abstract class AbstractDrink {
+    abstract getName(): string;
+}
+class CocaCola extends AbstractDrink {
+    getName(): string {
+        return '可乐';
+    }
+}
+class Sprite extends AbstractDrink {
+    getName(): string {
+        return '雪碧';
+    }
+}
+class Fanta extends AbstractDrink {
+    getName(): string {
+        return '芬达';
+    }
+}
+class Customer {
+    drink(drink: AbstractDrink) {
+        console.log('喝' + drink.getName());
+    }
+}
+let customer = new Customer();
+let cocaCola = new CocaCola();
+let sprite = new Sprite();
+let fanta = new Fanta();
+customer.drink(cocaCola);
+customer.drink(sprite);
+customer.drink(fanta);
+import React from 'react';
+import ReactDOM from 'react-dom';
+class App extends React.Component {
+    render() {
+        return (
+            <div>App </div>
+        )
+    }
+}
+let element = React.createElement(App);
+ReactDOM.render(element, document.getElementById('root'));
+abstract class AbstractDrink {
+    abstract getName(): any;
+}
+class CocaCola extends AbstractDrink {
+    getName(): any {
+        return 100;
+    }
+}
+```
+
+#### 2.2.4 D 依赖倒置原则
+
+- Dependence Inversion Principle
+- 面向接口编程，依赖于抽象而不依赖于具体实现
+- 要求我们在程序代码中传递参数时或在关联关系中，尽量引用层次高的抽象层类
+- 使用方只关注接口而不关注具体类的实现
+
+![依赖倒置原则](img/18.png)
+
+```js
+abstract class GirlFriend {
+    public age: number;
+    public height: number;
+    public abstract cook(): void;
+}
+class LinZhiLing extends GirlFriend {
+    public cook(): void {
+
+    }
+}
+class HanMeiMei extends GirlFriend {
+    public cook(): void {
+
+    }
+}
+class SingleDog {
+    constructor(public girlFriend: GirlFriend) {
+
+    }
+}
+let s1 = new SingleDog(new LinZhiLing());
+let s2 = new SingleDog(new HanMeiMei());
+import { createStore } from 'redux';
+let store = createStore(state => state);
+export interface Action<T = any> {
+    type: T
+}
+export interface AnyAction extends Action {
+    // Allows any extra properties to be defined in an action.
+    [extraProps: string]: any
+}
+let action: AnyAction = { type: 'increment', payload: 5 }
+store.dispatch(action);
+```
+
+#### 2.2.5 I 接口隔离原则
+
+- Interface Segregation Principle
+- 保持接口的单一独立，避免出现胖接口
+- 客户端不应该依赖它不需要的接口，类间的依赖关系应该建立在最小的接口上
+- 接口尽量细化，而且接口中的方法尽量的少
+- 类似于单一职责原则，更关注接口
+
+```js
+interface IUserManager {
+    updateUserInfo(): void;
+    updatePassword(): void;
+}
+interface IProductManager {
+    updateProduct(): void;
+    updatePrice(): void;
+}
+```
+
+![接口隔离原则](img/19.jpg)
+
+```js
+interface Running {
+    run(): void;
+}
+interface Flying {
+    fly(): void;
+}
+interface Swimming {
+    swim(): void;
+}
+class Automobile implements Running, Flying, Swimming {
+    run() { }
+    fly() { }
+    swim() { }
+}
+```
+
+### 2.3 迪米特法则
+
+- Law of Demeter，LOD
+- 有时候也叫做最少知识原则
+- 一个软件实体应当尽可能少地与其它实体发生相互作用
+- 迪米特法则的初衷在于降低类之间的耦合
+- 类定义时尽量要实现内聚,少使用`public`修饰符，尽量使用`private`、`protected` 等
+
+![迪米特法则](img/20.png)
+
+```js
+class Salesman {
+    constructor(public name: string) {
+
+    }
+    sale() {
+        console.log(this.name + ' 销售中....');
+    }
+}
+class SaleManager {
+    private salesmen: Array<Salesman> = [new Salesman('张三'), new Salesman('李四')];
+    sale() {
+        this.salesmen.forEach(salesman => salesman.sale());
+    }
+}
+class CEO {
+    private saleManager: SaleManager = new SaleManager();
+    sale() {
+        this.saleManager.sale();
+    }
+}
+let ceo = new CEO();
+ceo.sale();
+```
+
+### 2.4 合成复用原则
+
+#### 2.4.1 类的关系
+
+- 类之间有三种基本关系，分别是关联(聚合和组合)、泛化和依赖
+
+- 如果一个类单向依赖另一个类,那么它们之间就是单向关联。如果彼此依赖,则为相互依赖,即双向关联
+
+- 关联关系包括两种特例：聚合和组合
+
+  - 聚合，用来表示整体与部分的关系或者`拥有`关系,代表部分的对象可能会被整体拥有，但并不定定会随着整体的消亡而销毁,比如班级和学生
+
+  - 合成或者说组合要比聚合关系强的多，部分和整体的生命周期是一致的,比如人和器官之间
+
+    ![](img/21.png)
+
+#### 2.4.2 合成复用原则
+
+- 合成复用原则是通过将已有的对象纳入新对象中，作为新对象的成员对象来实现的
+- 新对象可以调用已有对象的功能，从而达到复用
+- 原则是尽量首先使用组合/聚合的方式，而不是使用继承
+- 专业人做专业事
+
+```js
+class Cooker {
+    cook() {
+
+    }
+}
+class Person {
+    private cooker: Cooker = new Cooker();
+    cook() {
+        this.cooker.cook();
+    }
+}
+```
+
+### 2.5 总结
+
+- 开闭原则是核心，对修改关闭对扩展开放是软件设计的基石
+- 单一职责要求我们设计接口和模块功能的时候尽量保证单一性和原子性，修改一条不影响全局和其它模块
+- 里氏替换原则和依赖倒置原则要求面向接口和抽象编程,不要依赖具体实现，否则实现一改，上层调用者就要对应修改
+
+### 2.6 如何写出好代码?
+
+- 可维护性 BUG是否好改?
+- 可读性 是否容易看懂?
+- 可扩展性 是否可以添加新功能?
+- 灵活性 添加新功能是否容易?老方法和接口是否容易复用?
+- 简洁性 代码是否简单清晰?
+- 可复用性 相同的代码不要写2遍?
+- 可测试性 是否方便写单元测试和集成测试?
