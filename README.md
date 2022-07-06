@@ -1,4 +1,4 @@
-# 第1章：软件生命周期与模型
+#  第1章：软件生命周期与模型
 
 ## 一、软件生命周期
 
@@ -264,7 +264,7 @@ npm i ts-node -g
 
 ## 一、面向对象
 
-> <font color="#f00">以类和对象作为组织代码的基本单位，并实现封装、抽象、继承、多态四个特性</font>
+> <font color=#f00>以类和对象作为组织代码的基本单位，并实现封装、抽象、继承、多态四个特性</font>
 
 面向对象的过程中往往会涉及到软件生命周期的三个阶段：分析、设计、编码
 
@@ -808,7 +808,7 @@ class Person {
 - 可复用性 相同的代码不要写2遍?
 - 可测试性 是否方便写单元测试和集成测试?
 
-## 三、23种设计模式总括
+## 三、 23种设计模式总括
 
 ### 3.1 设计模式分类
 
@@ -822,12 +822,14 @@ class Person {
 #### 3.1.2 结构型模式
 
 - `重要: 代理模式、桥接模式、装饰器模式、适配器模式`
-- 不重要: 外观模式、组合模式、享元模式
+- 不重要: 外观模式、组合模式、享元模式 
 
 #### 3.1.3 行为型
 
 - `重要: 观察者模式、模版方法模式、策略模式、职责链模式、迭代器模式、状态模式`
 - 不重要: 访问者模式、备忘录模式、命令模式、解释器模式、中介者模式
+
+<font color=#f90>注意：以上总共分别22种，与java不同的是`创建型`中的工厂模式，java分为：<font color=#f00>工厂方法模式、抽象工厂模式、单例模式、建造者模式、原型模式</font>这五种。</font>
 
 ## 四、工厂模式
 
@@ -906,5 +908,685 @@ export function createElement(type, config, children) {
         props,
     );
 }
+```
+
+###   4.2 工厂方法模式
+
+- 工厂方法模式`Factory Method`,又称多态性工厂模式。
+- 在工厂方法模式中,核心的工厂类不再负责所有的产品的创建，而是将具体创建的工作交给工厂子类去做。
+
+#### 4.2.1 类图演示
+
+![工厂方法模式](img/23.png)
+
+#### 4.2.2 代码演示
+
+```js
+export { }
+abstract class Coffee {
+    constructor(public name: string) {
+
+    }
+}
+abstract class Factory {
+    abstract createCoffee(): Coffee;
+}
+class AmericanoCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+
+class AmericanoCoffeeFactory extends Factory {
+    createCoffee() {
+        return new AmericanoCoffee('美式咖啡')
+    }
+}
+
+class LatteCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+class LatteCoffeeFactory extends Factory {
+    createCoffee() {
+        return new LatteCoffee('拿铁咖啡')
+    }
+}
+class CappuccinoCoffee extends Coffee {
+    constructor(public name: string) {
+        super(name);
+    }
+}
+class CappuccinoFactory extends Factory {
+    createCoffee() {
+        return new CappuccinoCoffee('卡布奇诺')
+    }
+}
+class Café {
+    static order(name: string) {
+        switch (name) {
+            case 'Americano':
+                return new AmericanoCoffeeFactory().createCoffee();
+            case 'Latte':
+                return new LatteCoffeeFactory().createCoffee();
+            case 'Cappuccino':
+                return new CappuccinoFactory().createCoffee();
+            default:
+                return null;
+        }
+    }
+}
+console.log(Café.order('Americano'));
+console.log(Café.order('Latte'));
+console.log(Café.order('Cappuccino'));
+```
+
+#### 4.2.3 应用场景
+
+- [createFactory](https://github.com/facebook/react/blob/master/packages/react/src/ReactElement.js#L401-L409)
+
+### 4.3 抽象工厂模式
+
+- 抽象工厂模式可以向客户端提供一个接口，使客户端在不必指定产品的具体的情况下，创建多个产品族中的产品对象
+- 工厂方法模式针对的是同一类或同等级产品,而抽象工厂模式针对的是多种类的产品设计
+- 系统中有多个产品族，每个具体工厂负责创建同一族但属于不同产品等级(产品种类)的产品
+- 产品族是一组相关或相互依赖的对象
+- 系统一次只能消费某一族产品，即相同产品族的产品是一起被使用的
+- 当系统需要新增一个产品族时，只需要增加新的工厂类即可，无需修改源代码；但是如果需要产品族中增加一个新种类的产品时，则所有的工厂类都需要修改
+
+#### 4.3.1 类图演示
+
+![抽象工厂](img/24.png)
+
+#### 4.3.2 代码演示
+
+```js
+export { };
+abstract class AmericanoCoffee { }
+abstract class LatteCoffee { }
+abstract class CappuccinoCoffee { }
+
+class StarbucksAmericanoCoffee extends AmericanoCoffee { }
+class StarbucksLatteCoffee extends LatteCoffee { }
+class StarbucksCappuccinoCoffee extends CappuccinoCoffee { }
+
+class LuckinAmericanoCoffee extends AmericanoCoffee { }
+class LuckinLatteCoffee extends LatteCoffee { }
+class LuckinCappuccinoCoffee extends CappuccinoCoffee { }
+
+abstract class CafeFactory {
+    abstract createAmericanoCoffee(): AmericanoCoffee;
+    abstract createLatteCoffee(): LatteCoffee;
+    abstract createCappuccinoCoffee(): CappuccinoCoffee;
+}
+class StarbucksCafeFactory extends CafeFactory {
+    createAmericanoCoffee() {
+        return new StarbucksAmericanoCoffee();
+    }
+    createLatteCoffee() {
+        return new StarbucksLatteCoffee();
+    }
+    createCappuccinoCoffee() {
+        return new StarbucksCappuccinoCoffee();
+    }
+}
+class LuckinCafeFactory extends CafeFactory {
+    createAmericanoCoffee() {
+        return new LuckinAmericanoCoffee();
+    }
+    createLatteCoffee() {
+        return new LuckinLatteCoffee();
+    }
+    createCappuccinoCoffee() {
+        return new LuckinCappuccinoCoffee();
+    }
+}
+
+let starbucksCafeFactory = new StarbucksCafeFactory();
+console.log(starbucksCafeFactory.createAmericanoCoffee());
+console.log(starbucksCafeFactory.createCappuccinoCoffee());
+console.log(starbucksCafeFactory.createLatteCoffee());
+
+let luckinCafeFactory = new LuckinCafeFactory();
+console.log(luckinCafeFactory.createAmericanoCoffee());
+console.log(luckinCafeFactory.createCappuccinoCoffee());
+console.log(luckinCafeFactory.createLatteCoffee());
+```
+
+## 五、单例模式
+
+首先，单例模式有3个特点↓↓↓
+
+1. 单例类只有一个实例对象；
+2. 该单例对象必须由单例类自行创建；
+3. 单例类对外提供一个访问该单例的全局访问点；
+
+### 5.1、类图演示
+
+![单例类图](img/25.jpg)
+
+### 5.2 基本代码
+
+#### 5.2.1 ES6单例模式
+
+```tsx
+export { };
+class Window {
+    private static instance: Window;
+    private constructor() { }
+    static getInstance() {
+        if (!Window.instance) {
+            Window.instance = new Window();
+        }
+        return Window.instance;
+    }
+}
+//new Window();
+var w1 = Window.getInstance();
+var w2 = Window.getInstance();
+console.log(w1 === w2);
+```
+
+#### 5.2.2 ES5单例模式
+
+```js
+interface Window {
+    hello: any
+}
+function Window() { }
+Window.prototype.hello = function () {
+    console.log('hello');
+}
+Window.getInstance = (function () {
+    let window: Window;
+    return function () {
+        if (!window)
+            window = new (Window as any)();
+        return window;
+    }
+})();
+let window = Window.getInstance();
+window.hello();
+```
+
+### 5.3 应用场景
+
+#### 5.3.1 redux中的createStore
+
+```tsx
+function createStore(reducer: any) {
+    let state: any;
+    let listeners: any[] = [];
+    function getState() {
+        return state;
+    }
+    function dispatch(action: any) {
+        state = reducer(state, action);
+        listeners.forEach(l => l());
+    }
+    function subscribe(listener: any) {
+        listeners.push(listener);
+        return () => {
+            listeners = listeners.filter(item => item != listener);
+            console.log(listeners);
+        }
+    }
+    dispatch({});
+    return {
+        getState,
+        dispatch,
+        subscribe
+    }
+}
+let store = createStore((state: any, action: any) => state);
+```
+
+#### 5.3.2 commonjs中的  [HotModuleReplacement](https://github.com/webpack/webpack/blob/8070bcd333cd1d07ce13fe5e91530c80779d51c6/lib/hmr/HotModuleReplacement.runtime.js#L55)
+
+```tsx
+(function(modules) {
+  // webpack的启动函数
+  //模块的缓存
+  var installedModules = {};
+  //定义在浏览器中使用的require方法
+  function __webpack_require__(moduleId) {
+    //检查模块是否在缓存中
+    if (installedModules[moduleId]) {
+      return installedModules[moduleId].exports;
+    }
+    //创建一个新的模块并且放到模块的缓存中
+    var module = (installedModules[moduleId] = {
+      i: moduleId,
+      l: false,
+      exports: {}
+    });
+
+    //执行模块函数
+    modules[moduleId].call(
+      module.exports,
+      module,
+      module.exports,
+      __webpack_require__
+    );
+
+    //把模块设置为已经加载
+    module.l = true;
+
+    //返回模块的导出对象
+    return module.exports;
+  }
+}
+```
+
+#### 5.3.3 [jquery](https://code.jquery.com/jquery-3.4.1.js)
+
+```tsx
+if(window.jQuery!=null){
+  return window.jQuery;
+}else{
+    //init~~~~~~~
+}
+```
+
+## 六、适配器模式
+
+- 适配器模式又称包装器模式,将一个类的接口转化为用户需要的另一个接口,解决类(对象)之间接口不兼容的问题
+- 旧的接口和使用者不兼容
+- 中间加一个适配器转换接口
+
+### 6.1 类图演示
+
+![适配器模式](img/26.png)
+
+### 6.2 代码演示
+
+```tsx
+class Socket {
+    output() {
+        return '输出220V';
+    }
+}
+
+abstract class Power {
+    abstract charge(): string;
+}
+class PowerAdapter extends Power {
+    constructor(public socket: Socket) {
+        super();
+    }
+    //转换后的接口和转换前不一样
+    charge() {
+        return this.socket.output() + ' 经过转换 输出24V';
+    }
+}
+let powerAdapter = new PowerAdapter(new Socket());
+console.log(powerAdapter.charge());
+```
+
+### 6.3 应用场景
+
+#### 6.3.1 [Axios](https://github.com/axios/axios/blob/master/lib/core/Axios.js#L6)
+
+```tsx
+//let axios = require('axios');
+let url = require('url');
+function axios(config: any): any {
+    let adaptor = getDefaultAdapter();
+    return adaptor(config);
+}
+axios({
+    method: 'GET',
+    url: 'http://localhost:8080/api/user?id=1'
+}).then(function (response: any) {
+    console.log(response);
+}, function (error: any) {
+    console.log(error);
+})
+
+function xhr(config: any) {
+    return new Promise(function (resolve, reject) {
+        var request = new XMLHttpRequest();
+        request.open(config.method, config.url, true);
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                if (request.status == 200) {
+                    resolve(request.response);
+                } else {
+                    reject('请求失败');
+                }
+            }
+        }
+    })
+}
+function http(config: any) {
+    let http = require('http');
+    let urlObject = url.parse(config.url);
+    return new Promise(function (resolve, reject) {
+        const options = {
+            hostname: urlObject.hostname,
+            port: urlObject.port,
+            path: urlObject.pathname,
+            method: config.method
+        };
+        var req = http.request(options, function (res: any) {
+            let chunks: any[] = [];
+            res.on('data', (chunk: any) => {
+                chunks.push(chunk);
+            });
+            res.on('end', () => {
+                resolve(Buffer.concat(chunks).toString());
+            });
+        });
+        req.on('error', (err: any) => {
+            reject(err);
+        });
+        req.end();
+    })
+}
+function getDefaultAdapter(): any {
+    var adapter;
+    if (typeof XMLHttpRequest !== 'undefined') {
+        adapter = xhr;
+    } else if (typeof process !== 'undefined') {
+        adapter = http;
+    }
+    return adapter;
+}
+```
+
+#### 6.3.2  promisify
+
+```tsx
+let fs = require('fs');
+var Bluebird = require("bluebird");
+let readFile = Bluebird.promisify(fs.readFile);
+
+(async function () {
+    let content = await readFile('./1.txt', 'utf8');
+    console.log(content);
+})()
+
+
+function promisify(readFile: any) {
+    return function (filename: any, encoding: any) {
+        return new Promise(function (resolve, reject) {
+            readFile(filename, encoding, function (err: any, data: any) {
+                if (err)
+                    reject(err);
+                else
+                    resolve(data);
+            })
+        });
+    }
+}
+```
+
+#### 6.3.3 [sequelize](https://github.com/demopark/sequelize-docs-Zh-CN/tree/master)
+
+```tsx
+//cnpm i sequelize sqlite3 -S
+const { Sequelize, Model, DataTypes } = require('sequelize');
+const sequelize = new Sequelize('sqlite::memory:');
+
+class User extends Model { }
+User.init({
+    username: DataTypes.STRING
+}, { sequelize, modelName: 'user' });
+
+sequelize.sync()
+    .then(() => User.create({
+        username: 'zhufeng'
+    }))
+    .then(result => {
+        console.log(result.toJSON());
+    });
+```
+
+## 七、装饰器模式
+
+- 在不改变其原有的结构和功能为对象添加新功能的模式其实就叫做装饰器模式
+- 最直观地就是我们买房后的装修
+- 装饰比继承更加灵活,可以实现装饰者和被装饰者之间松耦合
+- 被装饰者可以使用装饰者动态地增加和撤销功能
+
+### 7.1 类图演示
+
+![](img/27.png)
+
+### 7.2 代码演示
+
+```tsx
+abstract class Shape {
+    abstract draw(): void;
+}
+class Circle extends Shape {
+    draw() {
+        console.log('绘制圆形');
+    }
+}
+class Rectangle extends Shape {
+    draw() {
+        console.log('绘制矩形');
+    }
+}
+
+abstract class ColorfulShape extends Shape {
+    public constructor(public shape: Shape) {
+        super();
+    }
+    abstract draw(): void;
+}
+
+class RedColorfulShape extends ColorfulShape {
+    draw() {
+        this.shape.draw();
+        console.log('把边框涂成红色');
+    }
+}
+class GreenColorfulShape extends ColorfulShape {
+    draw() {
+        this.shape.draw();
+        console.log('把边框涂成绿色');
+    }
+}
+
+let circle = new Circle();
+let redColorfulShape = new RedColorfulShape(circle);
+redColorfulShape.draw();
+
+let rectangle = new Rectangle();
+let greenColorfulShape = new GreenColorfulShape(rectangle);
+greenColorfulShape.draw();
+```
+
+### 7.3 应用场景
+
+#### 7.3.1 类装饰器
+
+- 装饰器是一种特殊类型的声明，它能够被附加到类声明、方法、属性或参数上，可以修改类的行为
+- 常见的装饰器有类装饰器、属性装饰器、方法装饰器和参数装饰器
+- 装饰器的写法分为普通装饰器和装饰器工厂
+
+```tsx
+export { }
+namespace decorator {
+    interface Animal {
+        swings: string;
+        fly: any
+    }
+    function flyable(target: any) {
+        console.log(target);
+
+        target.prototype.swings = 2;
+        target.prototype.fly = function () {
+            console.log('I can fly');
+        }
+    }
+    @flyable
+    class Animal {
+        constructor() { }
+    }
+    let animal: Animal = new Animal();
+    console.log(animal.swings);
+    animal.fly();
+}
+```
+
+#### 7.3.2 属性装饰器
+
+- 属性装饰器表达式会在运行时当作函数被调用
+- 属性分为实例属性和类属性
+- 方法分为实例方法和类方法
+
+```tsx
+namespace property_namespace {
+    //实例属性target是类的原型对象,key是属性名称
+    function instancePropertyDecorator(target: any, key: string) {
+    }
+    //类属性target是的构造函数
+    function classPropertyDecorator(target: any, key: string) {
+    }
+    //实例方法装饰器target是原型对象,key方法名,descriptor是方法描述符
+    function instanceMethodDecorator(target: any, key: string, descriptor: PropertyDescriptor) {
+    }
+    //类方法装饰器target是类的构造函数
+    function classMethodDecorator(target: any, key: string, descriptor: PropertyDescriptor) {
+    }
+    class Person {
+        @instancePropertyDecorator
+        instanceProperty: string;
+        @classPropertyDecorator
+        public static classProperty: string;
+        @instanceMethodDecorator
+        instanceMethod() {
+            console.log('instanceMethod');
+        }
+        @classMethodDecorator
+        classMethod() {
+            console.log('classMethod');
+        }
+    }
+}
+```
+
+## 八、外观模式
+
+- 外观模式(Facade Pattern)又叫门面模式，定义一个将子系统的一组接口集成在一起的高层接口，以提供一个一致的外观
+- 外观模式让外界减少与子系统内多个模块的直接交互，从而减少耦合，让外界可以更轻松地使用子系统
+- 该设计模式由以下角色组成
+  - 门面角色：外观模式的核心。它被客户角色调用,它熟悉子系统的功能。内部根据客户角色的需求预定了几种功能的组合
+  - 子系统角色:实现了子系统的功能。它对客户角色和`Facade`是未知的
+  - 客户角色:通过调用Facede来完成要实现的功能
+- 遥控器、自动驾驶汽车、房屋中介
+
+### 8.1 类图展示
+
+![](img/28.jpeg)
+
+### 8.2 应用场景
+
+```tsx
+class Sum {
+    sum(a, b) {
+        return a + b;
+    }
+}
+class Minus {
+    minus(a, b) {
+        return a - b;
+    }
+}
+class Multiply {
+    multiply(a, b) {
+        return a * b;
+    }
+}
+class Calculator {
+    sumObj
+    minusObj
+    multiplyObj
+    constructor() {
+        this.sumObj = new Sum();
+        this.minusObj = new Minus();
+        this.multiplyObj = new Multiply();
+    }
+    sum(...args) {
+        return this.sumObj.sum(...args);
+    }
+    minus(...args) {
+        return this.minusObj.minus(...args);
+    }
+    multiply(...args) {
+        return this.multiplyObj.multiply(...args);
+    }
+}
+let calculator = new Calculator();
+console.log(calculator.sum(1, 2));
+console.log(calculator.minus(1, 2));
+console.log(calculator.multiply(1, 2));
+```
+
+## 九、迭代器模式
+
+迭代器模式(Iterator Pattern)用于顺序地访问聚合对象内部的元素，又无需知道对象内部结构。使用了迭代器之后，使用者不需要关心对象的内部构造，就可以按序访问其中的每个元素。
+
+### 9.1 类图演示
+
+![迭代器模式](img/29.jpeg)
+
+### 9.2 代码演示
+
+```tsx
+function createIterator(arr) {
+    let index=0;
+    return {
+        next() {
+            return index<arr.length?
+                {value: arr[index++],done: false}:
+                {done:true}
+        }
+    }
+}
+let it=createIterator([1,2]);
+console.log(it.next());
+console.log(it.next());
+console.log(it.next());
+```
+
+### 9.3 应用场景
+
+#### 9.3.1 使用for循环自己实现一个forEach
+
+```tsx
+Array.prototype.forEach = function (cb) {
+  for (var i = 0; i < this.length; i++) {
+      cb.call(this, this[i], i, arr);
+  }
+}
+let arr = [1, 2, 3];
+arr.forEach((item) => {
+  console.log(item);
+});
+```
+
+#### 9.2 yield
+
+- yield*后面跟的是一个可遍历的结构，它会调用该结构的遍历器接口
+
+```tsx
+let generator = function* () {
+    yield 1;
+    yield* [2, 3];
+    yield 4;
+};
+
+var iterator = generator();
+
+console.log(iterator.next()); // { value: 1, done: false }
+console.log(iterator.next()); // { value: 2, done: false }
+console.log(iterator.next()); // { value: 3, done: false }
+console.log(iterator.next()); // { value: 4, done: false }
+console.log(iterator.next()); // { value: undefined, done: true }
 ```
 
