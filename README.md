@@ -819,7 +819,7 @@ class Person {
 - `重要: 工厂模式(工厂方法模式、抽象工厂模式、简单工厂模式)、建造者模式、单例模式`
 - 不重要: 原型模式
 
-#### 3.1.2 结构型模式
+#### 3.1.2 结构型
 
 - `重要: 代理模式、桥接模式、装饰器模式、适配器模式`
 - 不重要: 外观模式、组合模式、享元模式 
@@ -1746,4 +1746,149 @@ app.listen(8080);
 - 主题对象(Subject) 该角色又称为被观察者,可以增加和删除观察者对象,它将有关状态存入具体观察者对象，在具体主题的内部状态改变时，给所有登记过(关联了观察关系)的观察者发出通知
 - 观察者(Observer)角色：定义一个接收通知的接口(update),在得到主题的通知时更新自己
 
-![](img/32.png)
+![观察者模式](img/32.png)
+
+### 11.2 代码演示
+
+```tsx
+abstract class Student {
+    constructor(public teacher: Teacher) { }
+    public abstract update();
+}
+class Xueba extends Student {
+    public update() {
+        console.log(this.teacher.getState() + ',学霸抬头举手');
+    }
+}
+class Xuezha extends Student {
+    public update() {
+        console.log(this.teacher.getState() + ',学渣低头祈祷');
+    }
+}
+
+class Teacher {
+    private students: Student[] = new Array<Student>();
+    public state: string = '老师讲课'
+    getState() {
+        return this.state;
+    }
+    public askQuestion() {
+        this.state = '老师提问';
+        this.notifyAllStudents();
+    }
+    attach(student: Student) {
+        this.students.push(student);
+    }
+    notifyAllStudents() {
+        this.students.forEach(student => student.update());
+    }
+}
+let teacher = new Teacher();
+teacher.attach(new Xueba(teacher));
+teacher.attach(new Xueza(teacher));
+teacher.askQuestion();
+```
+
+### 11.3 应用场景
+
+#### 11.3.1 原生DOM事件代理
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>观察者模式</title>
+</head>
+
+<body>
+    <button id="btn">click</button>
+    <script>
+        let btn = document.getElementById('btn');
+        const handler1 = () => { console.log(1); }
+        const handler2 = () => { console.log(2); }
+        const handler3 = () => { console.log(3); }
+        btn.addEventListener('click', handler1);
+        btn.addEventListener('click',handler2);
+        btn.addEventListener('click', handler3);
+    </script>
+</body>
+
+</html>
+```
+
+#### 11.3.2 EventEmitter
+
+略~！
+
+#### 11.3.3 生命周期函数
+
+![](img/33.jpg)
+
+![](img/34.jpg)
+
+#### 11.3.4 eventBus
+
+- 如果你觉得使用`$on`、`$emit`不方便,而你又不愿意引入`vuex`,可以使用`EventBus`
+- 在要相互通信的兄弟组件之中，都引入一个新的vue实例，然后通过分别调用这个实例的事件触发和监听来实现通信和参数传递
+
+#### 11.3.5 vue响应式
+
+在 Vue 中，每个组件实例都有相应的 `watcher` 实例对象，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的 `setter` 被调用时，会通知 `watcher` 重新计算，从而致使它关联的组件得以更新
+
+### 11.3 发布订阅模式
+
+首先，发布订阅模式也是隶属于观察者模式的一种，其特点如下↓↓↓
+
+- 订阅者把自己想订阅的事件注册到调度中心
+- 当该事件触发时候，发布者发布该事件到调度中心,由调度中心统一调度订阅者注册到调度中心的处理代码。
+- 虽然两种模式都存在订阅者和发布者（观察者可认为是订阅者、被观察者可认为是发布者）
+- 但是观察者模式是由被观察者调度的，而发布/订阅模式是统一由调度中心调的
+- 所以观察者模式的订阅者与发布者之间是存在依赖的，而发布/订阅模式则不会。
+
+代码示例↓
+
+```js
+class Agency {
+    _topics = {}
+    subscribe(topic, listener) {
+        let listeners = this._topics[topic];
+        if (listeners) {
+            listeners.push(listener);
+        } else {
+            this._topics[topic] = [listener];
+        }
+    }
+    publish(topic, ...args) {
+        let listeners = this._topics[topic] || [];
+        listeners.forEach(listener => listener(...args));
+    }
+}
+class Landlord {
+    constructor(public agent: Agency) { }
+    lend(topic, area, money) {
+        this.agent.publish(topic, area, money);
+    }
+}
+
+class Tenant {
+    constructor(public agent: Agency, public name: string) { }
+    order(topic) {
+        this.agent.subscribe(topic, (area, money) => {
+            console.log(this.name, `${area}平米, ${money}元`);
+        });
+    }
+}
+let agent = new Agency();
+let rich = new Tenant(agent, '大款');
+let poor = new Tenant(agent, '北漂');
+let landlord = new Landlord(agent);
+rich.order('豪宅');
+poor.order('单间');
+landlord.lend('豪宅', 10000, 1000000);
+landlord.lend('单间', 10, 1000);
+```
+
