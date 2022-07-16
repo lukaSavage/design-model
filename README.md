@@ -1590,3 +1590,160 @@ console.log(iterator.next()); // { value: 4, done: false }
 console.log(iterator.next()); // { value: undefined, done: true }
 ```
 
+## 十、代理模式
+
+- 由于一个对象不能直接引用另外一个对象，所以需要通过代理对象在这两个对象之间起到中介作用
+- 代理模式就是为目标对象创造一个代理对象，以实现对目标对象的访问
+- 这样就可以在代理对象里增加一些逻辑判断、调用前或调用后执行一些操作，从而实现了扩展目标的功能
+- 火车票代购、房产中介、律师、海外代购、明星经纪人
+
+### 10.1 类图演示
+
+![](img/30.png)
+
+### 10.2 代码
+
+```tsx
+abstract class Star {
+    abstract answerPhone(): void;
+}
+
+class Angelababy extends Star {
+    public available: boolean = true;
+    answerPhone(): void {
+        console.log('你好,我是Angelababy.');
+    }
+}
+class AngelababyAgent extends Star {
+    constructor(private angelababy: Angelababy) {
+        super();
+    }
+    answerPhone(): void {
+        console.log('你好,我是Angelababy的经纪人.');
+        if (this.angelababy.available) {
+            this.angelababy.answerPhone();
+        }
+    }
+}
+let angelababyAgent = new AngelababyAgent(new Angelababy());
+angelababyAgent.answerPhone();
+```
+
+### 10.3 场景
+
+#### 10.3.1 事件委托代理
+
+- 事件捕获指的是从document到触发事件的那个节点，即自上而下的去触发事件
+- 事件冒泡是自下而上的去触发事件
+- 绑定事件方法addEventListen的第三个参数，就是控制事件触发顺序是否为事件捕获。true为事件捕获；false为事件冒泡,默认false
+
+![](img/31.jpg)
+
+#### 10.3.2 图片预加载
+
+```js
+// app.js
+let express=require('express');
+let path=require('path')
+let app=express();
+app.get('/images/loading.gif',function (req,res) {
+    res.sendFile(path.join(__dirname,req.path));
+});
+app.get('/images/:name',function (req,res) {
+    setTimeout(() => {
+        res.sendFile(path.join(__dirname,req.path));
+    }, 2000);
+});
+app.get('/',function (req,res) {
+    res.sendFile(path.resolve('index.html'));
+});
+app.listen(8080);
+```
+
+```html
+// index.html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .bg-container {
+            width: 600px;
+            height: 400px;
+            margin: 100px auto;
+        }
+
+        .bg-container #bg-image {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="background">
+        <button data-src="/images/bg1.jpg">背景1</button>
+        <button data-src="/images/bg2.jpg">背景2</button>
+    </div>
+    <div class="bg-container">
+        <img id="bg-image" src="/images/bg1.jpg" />
+    </div>
+    <script>
+        let container = document.querySelector('#background');
+
+        class BackgroundImage {
+            constructor() {
+                this.bgImage = document.querySelector('#bg-image');
+            }
+            setSrc(src) {
+                this.bgImage.src = src;
+            }
+        }
+        class LoadingBackgroundImage { 
+             static LOADING_URL= `/images/loading.gif`;
+            constructor() {
+                this.backgroundImage = new BackgroundImage();
+            }
+            setSrc(src) {
+                this.backgroundImage.setSrc(LoadingBackgroundImage.LOADING_URL);
+                let img = new Image();
+                img.onload = () => {
+                    this.backgroundImage.setSrc(src);
+                }
+                img.src = src;
+            }
+        }
+        let loadingBackgroundImage = new LoadingBackgroundImage();
+        container.addEventListener('click', function (event) {
+            let src = event.target.dataset.src;
+            loadingBackgroundImage.setSrc(src + '?ts=' + Date.now());
+        });
+    </script>
+</body>
+
+</html>
+```
+
+#### 10.3.3 防抖、节流代理
+
+略~！
+
+#### 10.3.4 跨域代理
+
+#### 10.3.5 Proxy
+
+## 十一、观察者模式
+
+ 观察者模式（有时又被称为模型（Model）-视图（View）模式、源-收听者(Listener)模式或从属者模式）是[软件设计模式](https://baike.baidu.com/item/软件设计模式/2117635)的一种。在此种模式中，一个目标物件管理所有相依于它的观察者物件，并且在它本身的状态改变时主动发出通知。这通常透过呼叫各观察者所提供的方法来实现。此种模式通常被用来实现事件处理系统。
+观察者模式定义了一种一对多的依赖关系，让多个观察者对象同时监听某一个目标对象，当这个目标对象的状态发生变化时，会通知所有观察者对象，使它们能够自动更新
+
+### 11.1 类图演示
+
+- 主题对象(Subject) 该角色又称为被观察者,可以增加和删除观察者对象,它将有关状态存入具体观察者对象，在具体主题的内部状态改变时，给所有登记过(关联了观察关系)的观察者发出通知
+- 观察者(Observer)角色：定义一个接收通知的接口(update),在得到主题的通知时更新自己
+
+![](img/32.png)
